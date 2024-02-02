@@ -1,4 +1,5 @@
-﻿using Domain.Exceptions;
+﻿using Domain.Entities;
+using Domain.Exceptions;
 using Domain.Mappers;
 using Domain.Requests;
 using Domain.Response;
@@ -20,11 +21,13 @@ public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
     private readonly IValidator<BaseUserRequest> _validator;
+    private readonly IHashingService _hashingService;
 
-    public UserService(IUserRepository userRepository, IValidator<BaseUserRequest> validator)
+    public UserService(IUserRepository userRepository, IValidator<BaseUserRequest> validator, IHashingService hashingService)
     {
         _userRepository = userRepository;
         _validator = validator;
+        _hashingService = hashingService;
     }
 
     public async Task<UserResponse> Create(BaseUserRequest newUserRequest)
@@ -34,6 +37,9 @@ public class UserService : IUserService
         if (errors.Any()) throw new BadRequestException(errors);
 
         var newUser = UserMapper.ToEntity(newUserRequest);
+
+        newUser.Password = _hashingService.Hash(newUser.Password!);
+
         var user = await _userRepository.Create(newUser);
 
         return UserMapper.ToResponse(user);
@@ -69,6 +75,8 @@ public class UserService : IUserService
         if (existingUser is null) throw new NotFoundException("User not found!");
 
         var updateUser = UserMapper.ToEntity(updateUserRequest);
+
+        updateUser.Password = _hashingService.Hash(updateUser.Password!);
 
         var user = await _userRepository.Update(updateUser);
 
