@@ -10,3 +10,4 @@ public class BaseProductRequest
 public class UpdateProductRequest : BaseProductRequest
 {
     public int id { get; set; }
+}

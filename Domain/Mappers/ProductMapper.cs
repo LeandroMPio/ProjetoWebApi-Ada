@@ -14,14 +14,14 @@ public class ProductMapper
         Price = product.Price,
     };
 
-    public static Product toEntity(BaseProductRequest product) => new Product
+    public static Product ToEntity(BaseProductRequest product) => new Product
     {
         Name = product.Name,
         Brand = product.Brand,
         Price = product.Price,
     };
 
-    public static Product toEntity(UpdateProductRequest product) => new Product
+    public static Product ToEntity(UpdateProductRequest product) => new Product
     {
         Id = product.id,
         Name = product.Name,

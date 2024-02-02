@@ -1,38 +1,79 @@
-﻿using Domain.Entities;
+﻿using Domain.Exceptions;
+using Domain.Mappers;
+using Domain.Requests;
+using Domain.Responses;
+using Domain.Validators;
+using Infrastructure.Repositories;
 
 namespace Application.Services;
 
-public interface IProductSercice
+public interface IProductService
 {
-    Task<List<Product>> List();
-    Task<Product?> GetById(int id);
-    Task<Product> Create(Product newProduct);
-    Task<Product> Update(Product updateProduct);
+    Task<List<ProductResponse>> List();
+    Task<ProductResponse?> GetById(int id);
+    Task<ProductResponse> Create(BaseProductRequest newProductRequest);
+    Task<ProductResponse> Update(UpdateProductRequest updateProductRequest);
     Task Delete(int id);
 }
-public class ProductService : IProductSercice
+public class ProductService : IProductService
 {
-    public Task<Product> Create(Product newProduct)
+    private readonly IProductRepository _productRepository;
+    private readonly IValidator<BaseProductRequest> _validator;
+
+    public ProductService(IProductRepository productRepository, IValidator<BaseProductRequest> validator)
     {
-        throw new NotImplementedException();
+        _productRepository = productRepository;
+        _validator = validator;
     }
 
-    public Task<Product?> GetById(int id)
+    public async Task<ProductResponse> Create(BaseProductRequest newProductRequest)
     {
-        throw new NotImplementedException();
+        var errors = _validator.Validate(newProductRequest);
+
+        if (errors.Any()) throw new BadRequestException(errors);
+
+        var newProduct = ProductMapper.ToEntity(newProductRequest);
+        var product = await _productRepository.Create(newProduct);
+
+        return ProductMapper.ToResponse(product);
     }
 
-    public Task<List<Product>> List()
+    public async Task<ProductResponse?> GetById(int id)
     {
-        throw new NotImplementedException();
+        var product = await _productRepository.GetById(id);
+        return product is null ? null : ProductMapper.ToResponse(product);
     }
 
-    public Task<Product> Update(Product updateProduct)
+    public async Task<List<ProductResponse>> List()
     {
-        throw new NotImplementedException();
+        var products = await _productRepository.List();
+        var response = products.Select(products => ProductMapper.ToResponse(products)).ToList();
+        return response;
     }
-    public Task Delete(int id)
+
+    public async Task<ProductResponse> Update(UpdateProductRequest updateProductRequest)
     {
-        throw new NotImplementedException();
+        var errors = _validator.Validate(updateProductRequest);
+
+        if (errors.Any()) throw new BadRequestException(errors);
+
+        var existingProduct = await GetById(updateProductRequest.id);
+
+        if (existingProduct is null) throw new NotFoundException("Product not found");
+
+        var updateProduct = ProductMapper.ToEntity(updateProductRequest);
+
+        var product = await _productRepository.Update(updateProduct);
+
+        return ProductMapper.ToResponse(product);
+
+    }
+    public async Task Delete(int id)
+    {
+        var product = await GetById(id);
+
+        if (product is null) throw new NotFoundException("Product not found");
+
+        await _productRepository.Delete(id);
     }
 }

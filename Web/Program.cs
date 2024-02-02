@@ -26,6 +26,10 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IValidator<BaseUserRequest>, UserValidator>();
 
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IValidator<BaseProductRequest>, ProductValidator>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -41,8 +41,8 @@ public class UserService : IUserService
 
     public async Task<List<UserResponse>> List()
     {
-        var user = await _userRepository.List();
-        var response = user.Select(user => UserMapper.ToResponse(user)).ToList();
+        var users = await _userRepository.List();
+        var response = users.Select(users => UserMapper.ToResponse(users)).ToList();
         return response;
     }
 
