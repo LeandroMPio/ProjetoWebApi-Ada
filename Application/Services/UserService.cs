@@ -5,13 +5,14 @@ using Domain.Requests;
 using Domain.Response;
 using Domain.Validators;
 using Infrastructure.Repositories;
+using System.Security.Claims;
 
 namespace Application.Services;
 
 public interface IUserService
 {
     Task<List<UserResponse>> List();
-    Task<UserResponse?> GetById(int id);
+    Task<UserResponse?> GetById(int id, ClaimsPrincipal requestToken);
     Task<UserResponse?> FindByEmail(string email);
     Task<UserResponse> Create(BaseUserRequest newUserRequest);
     Task<UserResponse> Update(UpdateUserRequest updateUserRequest);
@@ -58,10 +59,21 @@ public class UserService : IUserService
         return user is null ? null : UserMapper.ToResponse(user);
     }
 
-    public async Task<UserResponse?> GetById(int id)
+    public async Task<UserResponse?> GetById(int id, ClaimsPrincipal requestToken)
     {
         var user = await _userRepository.GetById(id);
-        return user is null ? null : UserMapper.ToResponse(user);
+
+        if (user is null) return null;
+
+        var requestTokenUserId = Convert.ToInt32(requestToken.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var requestTokenUserRole = requestToken.FindFirst(ClaimTypes.Role)!.Value;
+
+        if (requestTokenUserRole != "Admin")
+        {
+            return requestTokenUserId != id ? null : UserMapper.ToResponse(user);
+        }
+
+        return UserMapper.ToResponse(user);
     }
 
     public async Task<UserResponse> Update(UpdateUserRequest updateUserRequest)

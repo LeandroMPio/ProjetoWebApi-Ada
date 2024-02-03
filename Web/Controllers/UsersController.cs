@@ -1,11 +1,13 @@
 ﻿using Application.Services;
 using Domain.Requests;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers;
 
 [Route("[controller]")]
 [ApiController]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _service;
@@ -15,6 +17,7 @@ public class UsersController : ControllerBase
         _service = service;
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> List()
     {
@@ -25,7 +28,9 @@ public class UsersController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> Get([FromRoute] int id)
     {
-        var user = await _service.GetById(id);
+        var requestToken = User.Clone();
+
+        var user = await _service.GetById(id, requestToken);
         return user is null ? NotFound() : Ok(user);
     }
 
@@ -36,6 +41,7 @@ public class UsersController : ControllerBase
         return user is null ? NotFound() : Ok(user);
     }
 
+    [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Post([FromBody] BaseUserRequest user)
     {
@@ -43,6 +49,7 @@ public class UsersController : ControllerBase
         return Ok(newUser);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Put([FromRoute] int id, [FromBody] UpdateUserRequest user)
     {
@@ -51,6 +58,7 @@ public class UsersController : ControllerBase
         return Ok(updateUser);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {

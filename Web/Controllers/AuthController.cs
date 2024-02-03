@@ -16,9 +16,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult SignIn([FromBody] AuthRequest request)
+    public async Task<IActionResult> SignIn([FromBody] AuthRequest request)
     {
-        var response = _authService.SignIn(request);
+        var response = await _authService.SignIn(request);
         return Ok(response);
     }
 }
