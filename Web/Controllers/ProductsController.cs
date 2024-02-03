@@ -1,11 +1,13 @@
 ﻿using Application.Services;
 using Domain.Requests;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Web.Controllers;
 
 [Route("[controller]")]
 [ApiController]
+[Authorize(Roles = "Admin")]
 public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
@@ -16,6 +18,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> List()
     {
         var products = await _productService.List();
@@ -23,6 +26,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<IActionResult> Get([FromRoute] int id)
     {
         var product = await _productService.GetById(id);
